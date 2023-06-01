@@ -27,7 +27,11 @@ pub enum Token {
 
     FUNCTION,
     LET,
- //   IF,
+    IF,
+    TRUE,
+    FALSE,
+    ELSE,
+    RETURN,
 
 }
 
@@ -83,6 +87,11 @@ impl Lexer {
                 return Ok(match ident.as_str() {
                     "fn" => Token::FUNCTION,
                     "let" => Token::LET,
+                    "if" => Token::IF,
+                    "else" => Token::ELSE,
+                    "true" => Token::TRUE,
+                    "false" => Token::FALSE,
+                    "return" => Token::RETURN,
                     _ => Token::IDENT(ident),
                 });
             },
@@ -155,7 +164,12 @@ mod test {
         };
         let result = add(five, ten);
         !-/*5;
-        5 < 10 > 5;"#;
+        5 < 10 > 5;
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }"#;
         let mut lexer = Lexer::new(input.into());
         let tokens = vec![
             Token::LET,
@@ -206,6 +220,23 @@ mod test {
             Token::GT,
             Token::INT(String::from("5")),
             Token::SEMICOLON,
+            Token::IF,
+            Token::LPAREN,
+            Token::INT(String::from("5")),
+            Token::LT,
+            Token::INT(String::from("10")),
+            Token::RPAREN,
+            Token::LBRACE,
+            Token::RETURN,
+            Token::TRUE,
+            Token::SEMICOLON,
+            Token::RBRACE,
+            Token::ELSE,
+            Token::LBRACE,
+            Token::RETURN,
+            Token::FALSE,
+            Token::SEMICOLON,
+            Token::RBRACE,
         ];
 
         for token in tokens {
