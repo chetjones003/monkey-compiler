@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, Ok};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
@@ -9,6 +9,8 @@ pub enum Token {
     EOF,
 
     ASSIGN,
+    EQUAL,
+    NOTEQUAL,
     PLUS,
     MINUS,
 
@@ -76,8 +78,22 @@ impl Lexer {
             b';' => Token::SEMICOLON,
             b'+' => Token::PLUS,
             b'-' => Token::MINUS,
-            b'=' => Token::ASSIGN,
-            b'!' => Token::BANG,
+            b'=' => {
+                if self.peek() == b'=' {
+                    self.read_char();
+                    Token::EQUAL
+                } else {
+                    Token::ASSIGN
+                }
+            },
+            b'!' => {
+                if self.peek() == b'=' {
+                    self.read_char();
+                    Token::NOTEQUAL
+                } else {
+                    Token::BANG
+                }
+            },
             b'/' => Token::SLASH,
             b'*' => Token::ASTERISK,
             b'<' => Token::LT,
@@ -125,6 +141,14 @@ impl Lexer {
         }
 
         return String::from_utf8_lossy(&self.input[pos..self.position]).to_string();
+    }
+
+    fn peek(&mut self) -> u8 {
+        if self.read_position >= self.input.len() {
+            return 0;
+        } else {
+            return self.input[self.read_position];
+        }
     }
 }
 
@@ -246,5 +270,83 @@ mod test {
         }
         return Ok(());
     }
+
+    #[test]
+    fn test_next_token3() -> Result<()> {
+        let input = r#"
+        !-/*5;
+        5 < 10 > 5;
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }"#;
+        let mut lexer = Lexer::new(input.into());
+        let tokens = vec![
+            Token::BANG,
+            Token::MINUS,
+            Token::SLASH,
+            Token::ASTERISK,
+            Token::INT(String::from("5")),
+            Token::SEMICOLON,
+            Token::INT(String::from("5")),
+            Token::LT,
+            Token::INT(String::from("10")),
+            Token::GT,
+            Token::INT(String::from("5")),
+            Token::SEMICOLON,
+            Token::IF,
+            Token::LPAREN,
+            Token::INT(String::from("5")),
+            Token::LT,
+            Token::INT(String::from("10")),
+            Token::RPAREN,
+            Token::LBRACE,
+            Token::RETURN,
+            Token::TRUE,
+            Token::SEMICOLON,
+            Token::RBRACE,
+            Token::ELSE,
+            Token::LBRACE,
+            Token::RETURN,
+            Token::FALSE,
+            Token::SEMICOLON,
+            Token::RBRACE,
+        ];
+
+        for token in tokens {
+            let next_token = lexer.next_token()?;
+            println!("expected: {:?}, recieved: {:?}", token, next_token);
+            assert_eq!(token, next_token);
+        }
+        return Ok(());
+    }
+
+    #[test]
+    fn test_next_token4() -> Result<()> {
+        let input = r#"
+        10 == 10;
+        10 != 9;
+        "#;
+        let mut lexer = Lexer::new(input.into());
+        let tokens = vec![
+            Token::INT(String::from("10")),
+            Token::EQUAL,
+            Token::INT(String::from("10")),
+            Token::SEMICOLON,
+            Token::INT(String::from("10")),
+            Token::NOTEQUAL,
+            Token::INT(String::from("9")),
+            Token::SEMICOLON,
+        ];
+
+        for token in tokens {
+            let next_token = lexer.next_token()?;
+            println!("expected: {:?}, recieved: {:?}", token, next_token);
+            assert_eq!(token, next_token);
+        }
+        return Ok(());
+    }
+
 
 }
