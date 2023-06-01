@@ -4,19 +4,31 @@ use anyhow::Result;
 pub enum Token {
     IDENT(String),
     INT(String),
+
 //    ILLEGAL,
     EOF,
+
     ASSIGN,
     PLUS,
+    MINUS,
+
     COMMA,
     SEMICOLON,
+    BANG,
+    ASTERISK,
+    SLASH,
+    LT,
+    GT,
+
     LPAREN,
     RPAREN,
     LBRACE,
     RBRACE,
+
     FUNCTION,
     LET,
  //   IF,
+
 }
 
 pub struct Lexer {
@@ -59,7 +71,13 @@ impl Lexer {
             b',' => Token::COMMA,
             b';' => Token::SEMICOLON,
             b'+' => Token::PLUS,
+            b'-' => Token::MINUS,
             b'=' => Token::ASSIGN,
+            b'!' => Token::BANG,
+            b'/' => Token::SLASH,
+            b'*' => Token::ASTERISK,
+            b'<' => Token::LT,
+            b'>' => Token::GT,
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let ident = self.read_ident();
                 return Ok(match ident.as_str() {
@@ -135,7 +153,9 @@ mod test {
         let add = fn(x, y) {
             x + y;
         };
-        let result = add(five, ten);"#;
+        let result = add(five, ten);
+        !-/*5;
+        5 < 10 > 5;"#;
         let mut lexer = Lexer::new(input.into());
         let tokens = vec![
             Token::LET,
@@ -174,6 +194,18 @@ mod test {
             Token::IDENT(String::from("ten")),
             Token::RPAREN,
             Token::SEMICOLON,
+            Token::BANG,
+            Token::MINUS,
+            Token::SLASH,
+            Token::ASTERISK,
+            Token::INT(String::from("5")),
+            Token::SEMICOLON,
+            Token::INT(String::from("5")),
+            Token::LT,
+            Token::INT(String::from("10")),
+            Token::GT,
+            Token::INT(String::from("5")),
+            Token::SEMICOLON,
         ];
 
         for token in tokens {
@@ -183,4 +215,5 @@ mod test {
         }
         return Ok(());
     }
+
 }
